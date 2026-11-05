@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Comparador de mapas de valor</title>
+<style>
+:root{--bg:#fff;--fg:#1f2d3a;--mut:#5b6770;--line:#dce3e8;--card:#f6f8fa;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14181c;--fg:#e8edf1;--mut:#9aa6b0;--line:#2b343b;--card:#1b2127}}
+:root[data-theme="dark"]{--bg:#14181c;--fg:#e8edf1;--mut:#9aa6b0;--line:#2b343b;--card:#1b2127}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 Helvetica,Arial,sans-serif}
+main{max-width:1200px;margin:0 auto;padding:24px 18px 48px}
+h1{font-size:28px;margin:0 0 4px}h2{font-size:20px;margin:36px 0 6px}
+p.s{color:var(--mut);margin:0 0 12px}
+.skel{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0}
+.skel b{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.chip{border:1.5px solid var(--c);color:var(--fg);background:transparent;border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer}
+.chip.on{background:var(--c);color:#fff}
+button.t{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin-top:12px}
+.ent{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.ent h3{margin:0;font-size:18px}.ent .d{color:var(--mut);font-size:13px;margin:2px 0 4px}.ent .st{font-size:12.5px;color:var(--mut);border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:12px}
+.tree{border-left:2px solid var(--line);margin-left:8px;padding-left:14px}
+.node{position:relative;margin:0 0 10px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);transition:opacity .15s}
+.node::before{content:"";position:absolute;left:-14px;top:18px;width:12px;border-top:2px solid var(--line)}
+.node.dim{opacity:.28}
+.node summary{cursor:pointer;font-weight:600;list-style:none}
+.node summary::-webkit-details-marker{display:none}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-left:4px;vertical-align:middle}
+.node p{margin:6px 0 0;font-size:13px}.node p em{font-style:normal;color:var(--mut);font-weight:600}
+.wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:760px}
+th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top;font-size:13.5px}
+th{font-size:13px;color:var(--mut)}
+tr.row{cursor:pointer}tr.row.on{background:var(--card)}tr.row.dim{opacity:.35}
+.sym{font-size:17px}.nm{display:block;color:var(--mut);font-size:12px}
+.tag{font-size:12px;border-radius:6px;padding:2px 8px;background:var(--card);border:1px solid var(--line)}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.box{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--card)}
+.box h4{margin:0 0 6px;font-size:15px}.box ul{margin:0;padding-left:18px}
+.note{color:var(--mut);font-size:12.5px;margin-top:14px}
+.method{margin:16px 0 28px}.method p{margin:0;color:var(--mut);font-size:13.5px;max-width:100ch}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;color:var(--mut);font-size:12px;margin:4px 0 12px}.legend span{white-space:nowrap}.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+.ent .kind{font-size:12px;color:var(--fg);font-weight:600;margin-top:8px}.ent .structure{color:var(--mut);font-size:12.5px;margin:2px 0 12px}
+.core{background:var(--bg);border-left:3px solid #6886a0;border-radius:5px;padding:8px 10px;margin:10px 0 12px;font-size:12.5px}.core b{display:block;font-size:11px;color:var(--mut);margin-bottom:2px}
+.node .evidence{margin-top:8px;padding-top:7px;border-top:1px dashed var(--line)}
+.commitment{margin:16px 0 28px;border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--card)}
+.commitment p{color:var(--mut);font-size:13.5px;max-width:100ch}
+.embed{width:min(100%,560px);margin:12px auto 0}
+.embed iframe{display:block;width:100%;height:350px;border:0;border-radius:8px;background:var(--bg)}
+.embed a{font-size:13px}
+
+.network-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px;background:#090d12;margin-top:12px}
+.cols{display:block;min-width:1550px;margin:0}
+.network-svg{display:block;width:100%;min-width:1550px;height:auto}
+.net-edge{stroke:#9aa8ba;stroke-width:3;fill:none;marker-end:url(#mapArrow);opacity:.82}
+.net-hub{fill:#202b3c;stroke:#8799b2;stroke-width:3}
+.net-hub-label{fill:#f5f7fa;font-weight:700;text-anchor:middle;font-size:18px}
+.net-leaf{stroke:#e4eaf0;stroke-width:2;cursor:pointer;transition:opacity .18s,stroke-width .18s,filter .18s}
+.net-leaf:hover,.net-leaf:focus{stroke:#fff;stroke-width:4;filter:brightness(1.08);outline:none}
+.net-label{fill:#1a2028;text-anchor:middle;font-weight:700;font-size:15px;pointer-events:none}
+.net-node.dim{opacity:.2}.net-node.selected .net-leaf{stroke:#fff;stroke-width:5}
+.cluster-label{fill:#dbe4ed;text-anchor:middle;font-size:18px;font-weight:700}
+.node-detail{margin-top:12px;padding:14px 16px;border:1px solid var(--line);border-left:4px solid #6886a0;border-radius:10px;background:var(--card);min-height:54px}
+.node-detail h3{margin:0 0 6px;font-size:17px}.node-detail p{margin:5px 0;font-size:13.5px}.node-detail em{font-style:normal;color:var(--mut);font-weight:650}
+.all-details{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px;margin-top:12px}
+.detail-mini{border:1px solid var(--line);border-radius:10px;background:var(--card);padding:10px 12px}.detail-mini summary{cursor:pointer;font-weight:700}.detail-mini p{font-size:12.5px;margin:6px 0}
+#editForm label{display:block;font-weight:600;margin:10px 0;font-size:13px}#editForm input,#editForm textarea{display:block;box-sizing:border-box;width:100%;margin-top:4px;border:1px solid var(--line);border-radius:7px;padding:9px;background:var(--bg);color:var(--fg);font:inherit}#editNote{margin:8px 0}.net-node.editable{cursor:grab}.net-node.editable:hover .net-leaf{stroke:#26384a;stroke-width:4}
+@media(max-width:700px){.network-svg{min-width:1550px}}
+</style></head><body><main>
+<h1>Comparador exploratorio de mapas de valor</h1>
+<p class="s">Tres mapas de entidades distintas para encontrar temas compartidos, conservar sus diferencias y detectar preguntas para una propuesta futura.</p>
+<div class="skel"><b>Entidad</b>→<b>Estructura original</b>→<b>Evidencias</b>→<b>Valor que genera</b></div>
+<div class="box method"><h4>Cómo leer esta comparación</h4><p>Cada mapa está construido de manera distinta. Primero se muestran sus componentes tal como aparecen en el insumo; después se comparan temas transversales codificados para este prototipo. Un tema sin evidencia explícita en el texto no significa que la entidad carezca de él. Las lecturas interpretativas se identifican como tales; los compromisos y avances se respaldan con las páginas citadas.</p></div>
+<section class="commitment" aria-labelledby="mapas-detalle-title"><h2 id="mapas-detalle-title" style="margin:0 0 6px">Mapas individuales que sustentan esta comparación</h2><p>El comparador reúne tres mapas de entidades distintas. Abre cada mapa para consultar sus componentes, evidencias y límites de interpretación antes de comparar los temas transversales.</p><ul><li><a href="https://chatgpt.com/library?file_id=libfile_7c104964614c8191a40be34fcdb694f9&amp;account_id=53c700e4-928d-4993-badd-889a1dce6c3a">Agroferia · mapa de valor</a></li><li><a href="https://chatgpt.com/library?file_id=libfile_a996368de9688191b301c15ea2403065&amp;account_id=53c700e4-928d-4993-badd-889a1dce6c3a">Quesos La Florida · mapa de valor</a></li><li><a href="https://chatgpt.com/library?file_id=libfile_fc8cec0f43cc8191b2cf61c7d8c6827f&amp;account_id=53c700e4-928d-4993-badd-889a1dce6c3a">Prolácteos Roldanillo · mapa de valor</a></li></ul><p><b>Alcance:</b> los mapas individuales organizan evidencia disponible; el comparador codifica temas comunes para exploración. Un tema sin evidencia en un insumo no implica ausencia de esa práctica en la entidad.</p></section>
+
+<section class="commitment" aria-labelledby="commitment-title"><h2 id="commitment-title" style="margin:0 0 6px">AGROFERIA: el documento sí muestra compromiso</h2><p>Las páginas compartidas ofrecen evidencia explícita de compromisos organizativos y de acciones realizadas. Por eso, en esta comparación, el tema “Compromiso y dedicación” tiene evidencia explícita para Agroferia.</p><ul><li><b>Principio declarado:</b> responsabilidad significa cumplir compromisos, funciones y labores organizativas y personales (p. 11).</li><li><b>Organización y apoyo mutuo:</b> Junta Directiva comprometida, Asamblea General como órgano de decisión, comités y fondos educativo, solidario y rotatorio; se describen usos concretos de esos fondos (pp. 7–8).</li><li><b>Acciones documentadas:</b> formalización, centro de acopio, proyectos con AGROSAVIA y SENA, y energía solar en el centro de acopio (p. 5). El documento también registra aportes de las familias para sostener la organización (p. 9).</li><li><b>Compromiso ambiental:</b> el sueño organizativo incluye cuidado del agua, agroecología y energías renovables; se reportan sistemas solares, prácticas silvopastoriles y aislamiento de nacimientos de agua (p. 18).</li></ul><p><b>Matiz para no generalizar:</b> el mismo documento señala que hace falta compromiso y participación de todas las personas asociadas y que no hay relevo generacional (p. 16). Esto apunta a una brecha de participación colectiva; no borra los compromisos declarados ni las acciones registradas. También conviene aclarar con la asociación una diferencia interna: p. 9 menciona a Alquería como aliado comercial, mientras p. 16 consigna “no tenemos aliados comerciales”.</p></section>
+
+<h2>1. Estructura de cada mapa</h2>
+<p class="s">Haz clic en los nodos para abrir la evidencia. Los filtros de tema y las filas de la matriz resaltan los nodos relacionados.</p>
+<div class="chips" id="chips"></div>
+<div class="legend" id="legend"></div>
+<button class="t" id="tg">Mostrar el detalle de todo</button> <button class="t" id="cl">Quitar filtro</button> <button class="t" id="editToggle" aria-pressed="false">Activar edición</button> <button class="t" id="exportBtn">Exportar cambios</button> <label class="t" for="importFile">Importar cambios</label><input id="importFile" type="file" accept="application/json,.json" hidden><button class="t" id="resetBtn">Restaurar versión base</button><p class="note" id="editNote">Las modificaciones se guardan en este navegador. Usa exportar/importar para transferirlas.</p>
+<div class="network-wrap"><div class="cols" id="cols"></div></div><div class="node-detail" id="nodeDetail" aria-live="polite">Haz clic en un nodo del mapa para ver su descripción, evidencia y temas relacionados.</div><form id="editForm" class="node-detail" hidden><h3>Editar nodo seleccionado</h3><label>Título completo<input id="editTitle" required></label><label>Texto del círculo<input id="editLabel" required></label><label>Descripción o evidencia<textarea id="editEvidence" rows="4" required></textarea></label><label>Valor generado<textarea id="editValue" rows="3" required></textarea></label><div class="skel"><button class="t" type="submit">Guardar cambios</button><button class="t" type="button" id="cancelEdit">Cancelar</button></div></form><div class="all-details" id="allDetails" hidden></div>
+
+<h2>2. Matriz de similitudes</h2>
+<p class="s">● evidencia explícita · ◐ indicio parcial o contextual · ○ sin evidencia explícita en el material. Toca una fila para resaltar los bloques relacionados.</p>
+<div class="wrap"><table id="mx"></table></div>
+
+<h2>3. Lecturas para validar</h2>
+<div class="sum" id="sum"></div>
+<p class="note">Fuentes de Agroferia: páginas del documento compartidas en esta conversación (5, 7–9, 11, 13–18). Las lecturas de valor generado son interpretativas; los resúmenes descriptivos citan páginas como evidencia. “No aparece” solo indica que no se encontró evidencia en el material revisado; no es un diagnóstico ni una recomendación. Las diferencias entre páginas se mantienen visibles para validarlas con la asociación.</p>
+<h2>4. Evidencia pública adicional para cerrar brechas</h2>
+<p class="s">Búsqueda web realizada el 5 de noviembre de 2026. Esta evidencia complementa los insumos originales y no se mezcla con la matriz anterior, que conserva su alcance y fuentes iniciales. “Parcial” significa que la fuente respalda una parte del tema, o documenta un vínculo/reto sin demostrar una práctica consolidada.</p>
+<div class="wrap"><table>
+<thead><tr><th>Entidad / tema</th><th>Estado</th><th>Evidencia encontrada</th><th>Fuente</th></tr></thead>
+<tbody>
+<tr><td>Agroferia · Trato humano y confianza</td><td><span class="tag">◐ Parcial</span></td><td>Una nota sobre Agroferia de Pradera documenta una iniciativa de equidad de género orientada a reconocer el trabajo, liderazgo y capacidad de decisión de las mujeres; también habla de unidad y solidaridad. Esto respalda relaciones respetuosas y solidarias, pero no declara explícitamente “confianza” ni describe el trato cotidiano entre miembros.</td><td><a href="https://www.redcomparte.org/trabajamos-en-unidad-para-promover-equidad/" target="_blank" rel="noopener">Red COMPARTE, 19 feb. 2026</a></td></tr>
+<tr><td>La Florida · Territorio y origen campesino</td><td><span class="tag">● Explícita</span></td><td>La empresa sitúa su origen en Caquetá, declara trabajar con productores locales y afirma que más de 1.000 familias ganaderas proveen leche. Es evidencia directa de origen territorial y vínculo con familias productoras.</td><td><a href="https://www.quesoslaflorida.com/origen/" target="_blank" rel="noopener">Quesos La Florida, “Origen y tradición”</a></td></tr>
+<tr><td>La Florida · Alianzas institucionales</td><td><span class="tag">● Explícita</span></td><td>Una publicación de Quesos La Florida informa que más de 200 campesinos del Caquetá certificaron competencias laborales con el SENA. Documenta colaboración concreta empresa–institución; no permite inferir por sí sola una alianza estratégica de largo plazo.</td><td><a href="https://es.linkedin.com/posts/quesos-la-florida_desarrollorural-certificaci%C3%B3nlaboral-quesoslaflorida-activity-7265840672895614977-5T8k" target="_blank" rel="noopener">Quesos La Florida, publicación sobre certificación con SENA</a></td></tr>
+<tr><td>La Florida · Sostenibilidad ambiental</td><td><span class="tag">● Explícita</span></td><td>Su política integral declara prevención y mitigación de impactos ambientales y desarrollo sostenible. La página de origen añade uso eficiente de recursos, tecnologías de optimización y protección del entorno. Son compromisos declarados; las páginas consultadas no aportan indicadores de resultados ambientales.</td><td><a href="https://www.quesoslaflorida.com/nosotros/" target="_blank" rel="noopener">Política integral</a> · <a href="https://www.quesoslaflorida.com/origen/" target="_blank" rel="noopener">Origen y tradición</a></td></tr>
+<tr><td>Prolácteos Roldanillo · Trato humano y confianza</td><td><span class="tag">◐ Parcial</span></td><td>Un profesional de Fedegán citado por CONtexto Ganadero describe a las empresarias como personas de “gran calidad humana”. Es respaldo externo explícito al componente humano; la fuente no acredita una práctica sistemática de confianza con trabajadores, proveedores o clientes.</td><td><a href="https://www.contextoganadero.com/regiones/prolacteos-roldanillo-una-acopiadora-eminentemente-familiar" target="_blank" rel="noopener">CONtexto Ganadero, 30 jun. 2023</a></td></tr>
+<tr><td>Prolácteos Roldanillo · Alianzas institucionales</td><td><span class="tag">◐ Parcial</span></td><td>Agronegocios reporta acompañamiento de la Unidad Ejecutora de Saneamiento del Valle para el crecimiento y adecuación de la planta, además de vigilancia/atención de INVIMA e ICA y participación de Fedegán. Hay vínculos institucionales verificables; las fuentes describen acompañamiento y control, no un convenio o alianza formal.</td><td><a href="https://www.agronegocios.co/agricultura/prolacteos-roldanillo-la-compania-que-produce-tres-toneladas-de-queso-diariamente-3655049" target="_blank" rel="noopener">Agronegocios, 13 jul. 2023</a></td></tr>
+<tr><td>Prolácteos Roldanillo · Sostenibilidad ambiental</td><td><span class="tag">◐ Parcial</span></td><td>Un trabajo de grado de la UCEVA (2024) identifica mermas de materia prima como impacto negativo en la sostenibilidad ambiental y eficiencia operativa. Demuestra que el tema ambiental es pertinente y que hay un reto por resolver; no documenta una acción ambiental positiva vigente. Un registro público también consigna acompañamiento ambiental a la empresa en 2017–2018.</td><td><a href="https://repositorio.uceva.edu.co/bitstream/handle/20.500.12993/4909/T0026637.pdf?sequence=1" target="_blank" rel="noopener">UCEVA, trabajo de grado (2024)</a> · <a href="https://www.funcionpublica.gov.co/dafpIndexerBHV/hvSigep/detallarHV/S2770872-6222-4" target="_blank" rel="noopener">Función Pública, experiencia laboral (2017–2018)</a></td></tr>
+</tbody></table></div>
+<p class="note"><b>Lectura para la siguiente validación:</b> Agroferia: confirmar con la asociación ejemplos concretos de confianza y buen trato. La Florida: pedir indicadores o resultados ambientales y precisar si la colaboración con SENA continúa. Prolácteos: preguntar por acuerdos institucionales vigentes, prácticas ambientales y medidas adoptadas frente a mermas, además de evidencia de confianza con proveedores y equipo. Las fuentes públicas identifican pistas; no sustituyen la validación con cada entidad.</p>
+</main>
+<script>
+const T=[["cal","Calidad del producto",145],["mer","Mercado y clientes",25],["sab","Saberes y tradición",45],["col","Trabajo colectivo y organización",210],["com","Compromiso y dedicación",350],["inn","Innovación y diversificación",270],["ter","Territorio y origen campesino",85],["bie","Empleo y bienestar de las personas",185],["hum","Trato humano y confianza",310],["ali","Alianzas institucionales",235],["amb","Sostenibilidad ambiental",165]];
+const col=id=>`hsl(${T.find(t=>t[0]==id)[2]},60%,42%)`;
+let E=[
+{n:"Agroferia",d:"Asociación de 30 familias campesinas · leche y quesos",kind:"Mapa de cadena de valor y organización",structure:"Territorio y recursos → familias → transformación → aliados y mercados → reinversión.",core:"El mapa conecta las condiciones del territorio, el trabajo asociativo y la producción de lácteos con mercados y bienestar local.",coreLabel:"Lectura del conjunto (síntesis)",generatedLabel:"Valor generado (lectura interpretativa)",st:"Organizado por áreas: territorio, personas, producción, aliados y bienestar.",c:[
+["Territorio y naturaleza","El documento reporta sistemas silvopastoriles en el 99% de las familias, prácticas de agroecología y aislamiento de nacimientos de agua; también registra retos de residuos, quemas y uso del agua (p. 18).","Sostiene la producción y expresa compromisos ambientales con avances y retos documentados.",{ter:1,amb:1}],
+["Familias y asociación","La Asamblea General es el órgano principal de decisión; la Junta Directiva y los comités tienen funciones descritas, y se consignan principios de igualdad, solidaridad y responsabilidad (pp. 7–8, 11).","Organiza la toma de decisiones, el apoyo entre familias y el cumplimiento de labores comunes.",{sab:1,col:1,com:1}],
+["Producción y transformación","El documento registra la construcción del centro de acopio, experiencia en derivados lácteos, diversificación productiva, empleos y una edición de la Feria del Queso; también plantea retos de inversión y planificación (pp. 5, 16).","Genera actividad productiva, empleo y oportunidades de diversificación.",{cal:1,inn:1,bie:1}],
+["Aliados y mercados","Se enumeran Alquería y aliados institucionales como AGROSAVIA, SENA, IMCA y Corpovalle, con aportes a capacidades y formación (pp. 5, 9). En otra página aparece el reto “no tenemos aliados comerciales” (p. 16), por validar con la asociación.","Las alianzas han aportado capacidades, formación y apoyo a iniciativas; el alcance comercial requiere aclaración.",{mer:1,ali:1}],
+["Bienestar y reinversión territorial","Se describen fondos educativo y solidario financiados con utilidades, préstamos del fondo rotatorio, cuotas para gastos operativos y generación de empleo (pp. 7–9, 16).","Apoya educación, emergencias familiares, mejoramiento de fincas y sostenibilidad organizativa.",{bie:1}],
+["Compromiso y corresponsabilidad","La responsabilidad se define como cumplir compromisos, funciones y labores; hay fondos con usos concretos y proyectos reportados como realizados. A la vez, se reconoce que falta compromiso y participación de todas las personas asociadas (pp. 5, 7–8, 11, 16).","El compromiso organizativo es explícito y cuenta con acciones documentadas; la participación de todas las personas sigue siendo un reto.",{com:1,col:1}]]},
+{n:"La Florida",d:"Procesamiento y comercialización de lácteos",kind:"Mapa de valores organizacionales",structure:"Valores → acciones o capacidades → valor generado.",core:"Transformación de la leche en productos lácteos con tradición familiar, conocimiento productivo y conexión con el territorio.",coreLabel:"Propuesta central del mapa",st:"Organizado por seis valores, cada uno con acciones o capacidades y valor generado.",extra:{bie:[.5,"solo en el enunciado central (bienestar humano)"]},c:[
+["Trabajo en equipo","Cooperación interáreas, integración de saberes y sinergia operativa.","Eficiencia en los procesos y cultura organizacional.",{col:1,sab:1}],
+["Respeto","Trato digno, ambiente armonioso y comunicación asertiva.","Confianza mutua entre colaboradores, proveedores y clientes.",{hum:1}],
+["Empatía","Escucha activa, atención humana y adaptación a las necesidades del entorno.","Relaciones cercanas y comprensión profunda de clientes y equipo.",{hum:1}],
+["Orientación al cliente","Servicio personalizado, satisfacción de requerimientos y fidelización.","Lealtad de los clientes y posicionamiento firme en el mercado.",{mer:1}],
+["Compromiso","Responsabilidad, cumplimiento de metas y alineación estratégica.","Sostenibilidad, continuidad del negocio y crecimiento sólido.",{com:1}],
+["Pasión","Compromiso con la excelencia, energía en la elaboración y mejora continua.","Productos de alta calidad fabricados con esmero.",{cal:1,com:1,inn:.5}]]},
+{n:"Prolácteos Roldanillo",d:"Transformación de leche · tradición familiar y conexión con el territorio",kind:"Mapa de valores, saberes y relaciones",structure:"Valores → saberes, recursos o relaciones → valor generado.",core:"Procesamiento y comercialización de productos lácteos con enfoque en relaciones duraderas, bienestar humano y trabajo colaborativo.",coreLabel:"Propuesta central del mapa",st:"Organizado por seis componentes, cada uno con saberes, recursos o relaciones y valor generado.",c:[
+["Tradición familiar","Técnicas tradicionales y elaboración de quesos.","Identidad y continuidad del conocimiento familiar.",{sab:1}],
+["Dedicación","Experiencia, trabajo y organización.","Empleo y continuidad de la actividad productiva.",{com:1,col:1,bie:1}],
+["Identidad local","Leche y proveedores regionales; compra a familias campesinas y ganaderos.","Oportunidades económicas para las familias rurales.",{ter:1,bie:1}],
+["Compromiso regional","Productores, trabajadores, distribuidores y consumidores.","Empleo, desarrollo económico y fortalecimiento del mercado regional.",{mer:1,bie:1}],
+["Innovación","Maquinaria, tecnología y conocimiento técnico; diversificación y maquila.","Nuevos productos, mejores procesos y oportunidades comerciales.",{inn:1}],
+["Calidad","Pasteurización, refrigeración y control de producción.","Confianza en los productos y mejores condiciones de comercialización.",{cal:1}]]}];
+let sel=null;const $=i=>document.getElementById(i);
+const lv=(e,id)=>{let m=0,names=[];e.c.forEach(c=>{const v=c[3][id]||0;if(v){m=Math.max(m,v);names.push(c[0])}});if(e.extra&&e.extra[id]&&e.extra[id][0]>m){m=e.extra[id][0];names.push(e.extra[id][1])}return[m,names]};
+
+let shortNames=[
+ ["Territorio","Familias","Producción","Aliados y mercados","Bienestar","Compromiso"],
+ ["Trabajo en equipo","Respeto","Empatía","Cliente","Compromiso","Pasión"],
+ ["Tradición familiar","Dedicación","Identidad local","Compromiso regional","Innovación","Calidad"]
+];
+const centers=[350,1025,1700],cy=530;
+const offsets=[[-215,-195],[0,-250],[215,-195],[-215,195],[0,250],[215,195]];
+const BASE_E=JSON.parse(JSON.stringify(E)),BASE_LABELS=JSON.parse(JSON.stringify(shortNames));
+try{const saved=JSON.parse(localStorage.getItem("mapa-valor-editable-v1")||"null");if(saved&&Array.isArray(saved.E)&&saved.E.length===3&&saved.E.every(e=>Array.isArray(e.c)&&e.c.length===6)&&Array.isArray(saved.shortNames)){E=saved.E;shortNames=saved.shortNames}}catch{}
+let selectedNode=null,editMode=false;
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function persist(){localStorage.setItem("mapa-valor-editable-v1",JSON.stringify({E,shortNames}))}
+function closeEditor(){$("editForm").hidden=true}
+function openEditor(){if(!selectedNode){alert("Selecciona primero un nodo del mapa.");return}const [ei,ci]=selectedNode.split("-").map(Number),c=E[ei].c[ci];$("editTitle").value=c[0];$("editLabel").value=shortNames[ei][ci];$("editEvidence").value=c[1];$("editValue").value=c[2];$("editForm").hidden=false;$("editForm").scrollIntoView({behavior:"smooth",block:"nearest"})}
+function exportChanges(){const blob=new Blob([JSON.stringify({E,shortNames},null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="mapas-de-valor-cambios.json";a.click();URL.revokeObjectURL(a.href)}
+function importChanges(file){const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.E)||d.E.length!==3||!d.E.every(e=>Array.isArray(e.c)&&e.c.length===6)||!Array.isArray(d.shortNames)||d.shortNames.length!==3||!d.shortNames.every(x=>Array.isArray(x)&&x.length===6))throw Error();E=d.E;shortNames=d.shortNames;persist();draw();closeEditor();alert("Cambios importados.")}catch{alert("El archivo no tiene el formato esperado.")}};r.readAsText(file)}
+const softColor=id=>{const t=T.find(x=>x[0]===id);return "hsl("+(t?t[2]:210)+",78%,78%)"};
+function wrapLabel(label,max=15){const words=label.split(/\s+/),lines=[];let line="";for(const w of words){if((line+" "+w).trim().length>max&&line){lines.push(line);line=w}else line=(line?line+" ":"")+w}if(line)lines.push(line);return lines.slice(0,4)}
+function renderNetwork(){
+ const pos=E.map((e,ei)=>e.c.map((c,ci)=>{const o=offsets[ci];return{x:centers[ei]+o[0],y:cy+o[1],ei:ei,ci:ci,c:c}}));
+ const edges=pos.map((nodes,ei)=>nodes.map(n=>'<line class="net-edge" x1="'+centers[ei]+'" y1="'+cy+'" x2="'+n.x+'" y2="'+n.y+'"/>').join("")).join("");
+ const hubs=E.map((e,ei)=>'<g><circle class="net-hub" cx="'+centers[ei]+'" cy="'+cy+'" r="112"/><text class="net-hub-label" x="'+centers[ei]+'" y="'+(cy-8)+'"><tspan x="'+centers[ei]+'">'+(e.n==="Prolácteos Roldanillo"?"Prolácteos":e.n)+'</tspan>'+(e.n==="Prolácteos Roldanillo"?'<tspan x="'+centers[ei]+'" dy="23">Roldanillo</tspan>':"")+'</text></g>').join("");
+ const leaves=pos.flat().map(n=>{
+  const keys=Object.keys(n.c[3]),active=!sel||keys.includes(sel),isSelected=selectedNode===n.ei+"-"+n.ci,label=shortNames[n.ei][n.ci],lines=wrapLabel(label),start=n.y-(lines.length-1)*9,value=keys[0]||"cal";
+  return '<g class="net-node'+(editMode?" editable":"")+(active?"":" dim")+(isSelected?" selected":"")+'" data-node="'+n.ei+"-"+n.ci+'" role="button" tabindex="0" aria-label="'+esc(E[n.ei].n+": "+n.c[0])+'"><title>'+esc(E[n.ei].n+" · "+n.c[0])+'</title><circle class="net-leaf" cx="'+n.x+'" cy="'+n.y+'" r="86" fill="'+softColor(value)+'" style="'+(n.c[3][value]<1?"opacity:.66":"")+'"/><text class="net-label" x="'+n.x+'" y="'+start+'">'+lines.map((line,i)=>'<tspan x="'+n.x+'" dy="'+(i?18:0)+'">'+esc(line)+'</tspan>').join("")+'</text></g>'
+ }).join("");
+ $("cols").innerHTML='<svg class="network-svg" viewBox="0 0 2050 920" role="img" aria-label="Mapa interactivo de Agroferia, La Florida y Prolácteos Roldanillo"><defs><marker id="mapArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#9aa8ba"/></marker></defs><text class="cluster-label" x="350" y="45">MAPA DE CADENA Y ORGANIZACIÓN</text><text class="cluster-label" x="1025" y="45">MAPA DE VALORES</text><text class="cluster-label" x="1700" y="45">MAPA DE VALORES Y RELACIONES</text>'+edges+hubs+leaves+'</svg>';
+}
+function renderNodeDetail(){
+ const el=$("nodeDetail");if(!selectedNode){el.textContent="Haz clic en un nodo del mapa para ver su descripción, evidencia y temas relacionados.";return}
+ const bits=selectedNode.split("-").map(Number),ei=bits[0],ci=bits[1],e=E[ei],c=e.c[ci],topics=Object.keys(c[3]).map(id=>{const t=T.find(x=>x[0]===id);return t?t[1]+(c[3][id]<1?" (parcial)":""):id}).join(" · ");
+ el.innerHTML="<h3>"+esc(e.n)+" · "+esc(c[0])+"</h3><p><em>Descripción / evidencia:</em> "+esc(c[1])+"</p><p><em>"+esc(e.generatedLabel||"Valor generado")+":</em> "+esc(c[2])+"</p><p><em>Temas asignados:</em> "+esc(topics)+"</p>"+(editMode?"<button class=\"t\" type=\"button\" id=\"editSelected\">Editar este nodo</button>":"");
+}
+function renderAllDetails(){
+ $("allDetails").innerHTML=E.map((e,ei)=>e.c.map((c,ci)=>'<details class="detail-mini"><summary>'+esc(e.n)+" · "+esc(c[0])+'</summary><p><em>Descripción / evidencia:</em> '+esc(c[1])+'</p><p><em>'+(esc(e.generatedLabel||"Valor generado"))+':</em> '+esc(c[2])+'</p><p><em>Temas:</em> '+Object.keys(c[3]).map(id=>{const t=T.find(x=>x[0]===id);return esc(t?t[1]:id)}).join(" · ")+'</p></details>').join("")).join("");
+}
+
+function draw(){
+ $("chips").innerHTML=T.map(t=>`<button class="chip${sel==t[0]?" on":""}" style="--c:${col(t[0])}" data-t="${t[0]}">${t[1]}</button>`).join("");
+ $("legend").innerHTML=T.map(t=>`<span><i style="background:${col(t[0])}"></i>${t[1]}</span>`).join("");
+ renderNetwork();
+ renderNodeDetail();
+ const rows=T.map(t=>{const r=E.map(e=>lv(e,t[0]));const direct=r.filter(x=>x[0]==1).length;const partial=r.filter(x=>x[0]>0&&x[0]<1).length;return{t,r,direct,partial}});
+ const read=x=>x.direct==3?"Explícito en las tres":x.direct==2?"Explícito en dos":x.direct==1?"Explícito en una":x.partial?"Solo indicio parcial":"Sin evidencia explícita";
+ $("mx").innerHTML=`<tr><th>Tema</th>${E.map(e=>`<th>${e.n}</th>`).join("")}<th>Lectura</th></tr>`+rows.map(x=>`<tr class="row${sel==x.t[0]?" on":sel?" dim":""}" data-t="${x.t[0]}"><td><span class="dot" style="background:${col(x.t[0])};margin:0 6px 0 0"></span>${x.t[1]}</td>${x.r.map(c=>`<td><span class="sym">${c[0]==1?"●":c[0]?"◐":"○"}</span><span class="nm">${c[1].map(esc).join(" · ")}</span></td>`).join("")}<td><span class="tag">${read(x)}</span></td></tr>`).join("");
+ const g=n=>rows.filter(x=>x.direct==n).map(x=>x.t[1]);
+ const partial=rows.filter(x=>x.direct==0&&x.partial>0).map(x=>x.t[1]);
+ const noEvidence=rows.filter(x=>x.direct==0&&x.partial==0).map(x=>x.t[1]);
+ const gaps=E.map(e=>`<li><b>${e.n}:</b> ${T.filter(t=>lv(e,t[0])[0]==0).map(t=>t[1]).join(", ")||"hay al menos un indicio parcial o explícito en todos los temas"}</li>`).join("");
+ $("sum").innerHTML=`<div class="box"><h4>Evidencia explícita en las tres</h4><ul>${g(3).map(x=>`<li>${x}</li>`).join("")||"<li>Aún no hay temas codificados de forma explícita en las tres.</li>"}</ul></div><div class="box"><h4>Evidencia explícita en dos</h4><ul>${g(2).map(x=>`<li>${x}</li>`).join("")||"<li>Sin temas en esta categoría.</li>"}</ul></div><div class="box"><h4>Evidencia explícita en una</h4><ul>${g(1).map(x=>`<li>${x}</li>`).join("")||"<li>Sin temas en esta categoría.</li>"}</ul></div><div class="box"><h4>Solo indicios parciales</h4><ul>${partial.map(x=>`<li>${x}</li>`).join("")||"<li>Sin temas en esta categoría.</li>"}</ul><h4 style="margin-top:10px">Sin evidencia explícita en el material</h4><ul>${noEvidence.map(x=>`<li>${x}</li>`).join("")||"<li>Todos los temas tienen alguna evidencia.</li>"}</ul></div><div class="box"><h4>Temas sin evidencia explícita por entidad</h4><ul>${gaps}</ul></div>`;
+}
+document.addEventListener("click",ev=>{if(ev.target.closest("#editSelected")){openEditor();return}const node=ev.target.closest("[data-node]");if(node){selectedNode=node.dataset.node;renderNetwork();renderNodeDetail();return}const t=ev.target.closest("[data-t]");if(t){sel=sel==t.dataset.t?null:t.dataset.t;draw()}});
+document.addEventListener("keydown",ev=>{if((ev.key==="Enter"||ev.key===" ")&&ev.target.matches("[data-node]")){ev.preventDefault();selectedNode=ev.target.dataset.node;renderNetwork();renderNodeDetail()}});
+$("cl").onclick=()=>{sel=null;selectedNode=null;$("allDetails").hidden=true;$("tg").textContent="Mostrar el detalle de todo";draw()};
+let open=false;$("tg").onclick=()=>{open=!open;if(open)renderAllDetails();$("allDetails").hidden=!open;$("tg").textContent=open?"Ocultar el detalle":"Mostrar el detalle de todo"};
+draw();
+$("editToggle").onclick=()=>{editMode=!editMode;$("editToggle").textContent=editMode?"Desactivar edición":"Activar edición";$("editToggle").setAttribute("aria-pressed",String(editMode));renderNetwork();renderNodeDetail()};
+$("editForm").onsubmit=ev=>{ev.preventDefault();if(!selectedNode)return;const [ei,ci]=selectedNode.split("-").map(Number),c=E[ei].c[ci];c[0]=$("editTitle").value.trim();shortNames[ei][ci]=$("editLabel").value.trim();c[1]=$("editEvidence").value.trim();c[2]=$("editValue").value.trim();persist();closeEditor();draw()};
+$("cancelEdit").onclick=closeEditor;$("exportBtn").onclick=exportChanges;$("importFile").onchange=ev=>{if(ev.target.files[0])importChanges(ev.target.files[0]);ev.target.value=""};
+$("resetBtn").onclick=()=>{if(confirm("¿Restaurar los datos originales y borrar los cambios guardados en este navegador?")){E=JSON.parse(JSON.stringify(BASE_E));shortNames=JSON.parse(JSON.stringify(BASE_LABELS));localStorage.removeItem("mapa-valor-editable-v1");selectedNode=null;closeEditor();draw()}};
+</script></body></html>
